@@ -1,0 +1,49 @@
+name: Playwright Test
+
+on:
+  pull_request:
+    branches: [ test ]
+
+jobs:
+  test:
+    runs-on: self-hosted
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Install dependencies
+        run: |
+          npm install
+          npx playwright install --with-deps
+
+      - name: Run Playwright tests
+        id: test_run
+        run: |
+          npx playwright test > result.txt || echo "TEST_FAILED=true" >> $GITHUB_ENV
+
+      - name: Read result
+        id: result
+        run: |
+          if grep -q "failed" result.txt; then
+            echo "status=❌ Failed" >> $GITHUB_OUTPUT
+          else
+            echo "status=✅ Passed" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Comment on PR
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const result = "${{ steps.result.outputs.status }}";
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `Playwright Test Result: ${result}`
+            });
