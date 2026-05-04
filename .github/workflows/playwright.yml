@@ -1,11 +1,12 @@
 name: Playwright Test
 
 on:
-  pull_request:
-    branches: [ test ]
+  pull_request_review:
+    types: [submitted]
 
 jobs:
   test:
+    if: github.event.review.state == 'approved'
     runs-on: self-hosted
 
     steps:
