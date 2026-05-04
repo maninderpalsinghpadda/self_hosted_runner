@@ -1,0 +1,26 @@
+name: Hello World Runner Test
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [ test ]
+
+jobs:
+  test:
+    if: github.event.pull_request.merged == true
+    runs-on: self-hosted
+
+    steps:
+      - name: Say Hello in Runner
+        run: echo "Hello World from self-hosted runner 🚀"
+
+      - name: Comment on PR
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: "Hello World from self-hosted runner 🚀"
+            });
