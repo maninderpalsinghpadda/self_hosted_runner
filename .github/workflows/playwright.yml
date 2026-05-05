@@ -5,29 +5,28 @@ on:
     types: [closed]
     branches: [ test ]
 
+permissions:
+  pull-requests: write
+  contents: read
+
 jobs:
   test:
     if: github.event.pull_request.merged == true
     runs-on: self-hosted
 
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 18
 
-      - name: Install dependencies
-        run: |
-          npm install
-          npx playwright install --with-deps
+      - run: npm install
 
       - name: Run Playwright tests
         id: test_run
         run: |
-          npx playwright test > result.txt || echo "TEST_FAILED=true" >> $GITHUB_ENV
+          npx playwright test > result.txt || echo "FAILED=true" >> $GITHUB_ENV
 
       - name: Read result
         id: result
