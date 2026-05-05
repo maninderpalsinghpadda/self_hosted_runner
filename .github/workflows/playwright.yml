@@ -23,20 +23,16 @@ jobs:
 
       - run: npm install
 
-      # ✅ Run tests and capture logs + exit code
       - name: Run Playwright tests
         id: test_run
         run: |
           npx playwright test | tee result.txt
           echo "EXIT_CODE=$?" >> $GITHUB_ENV
 
-      # ✅ Extract last lines (real error snippet)
       - name: Extract error logs
-        id: error
         run: |
           tail -n 30 result.txt > error.txt
 
-      # ✅ Decide pass/fail
       - name: Read result
         id: result
         run: |
@@ -46,7 +42,6 @@ jobs:
             echo "status=✅ Passed" >> $GITHUB_OUTPUT
           fi
 
-      # ✅ Comment on PR with real error
       - name: Comment on PR
         uses: actions/github-script@v7
         with:
@@ -54,19 +49,18 @@ jobs:
             const fs = require('fs');
             const result = "${{ steps.result.outputs.status }}";
             let errorLog = "";
+
             try {
               errorLog = fs.readFileSync('error.txt', 'utf8');
             } catch (e) {
               errorLog = "No error log found";
             }
 
+            const body = "Playwright Test Result: " + result + "\n\n```\n" + errorLog + "\n```";
+
             github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: `Playwright Test Result: ${result}
-
-\`\`\`
-${errorLog}
-\`\`\``
+              body: body
             });
